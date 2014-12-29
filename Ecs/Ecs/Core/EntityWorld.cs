@@ -46,9 +46,12 @@ namespace Ecs.Core
         public Entity Instantiate(Prefab prefab, Vector2 position, float rotation, Vector2 scale)
         {
             var entity = Create(prefab.Name + " (Copy)", prefab.Layer);
+            
             entity.Transform.Position = position;
             entity.Transform.Rotation = rotation;
             entity.Transform.Scale = scale;
+            prefab.InitializeFor(entity);
+
             return entity;
         }
 

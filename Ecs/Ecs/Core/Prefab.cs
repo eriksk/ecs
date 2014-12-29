@@ -39,7 +39,7 @@ namespace Ecs.Core
             get { return _layer; }
         }
 
-        internal void CreateInstance(Entity entity)
+        internal void InitializeFor(Entity entity)
         {
             foreach (var component in _components)
                 entity.AddComponent(component.Cast<IClone>().Clone());
