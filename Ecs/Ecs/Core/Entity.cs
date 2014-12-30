@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Ecs.Core.Functions;
+using Ecs.Core.Messages;
 using Ecs.Core.Transforms;
 
 namespace Ecs.Core
@@ -64,6 +65,15 @@ namespace Ecs.Core
                     return component.Cast<TComponentType>();
             }
             throw new ArgumentException("Component for type '{0}' does not exist", typeof(TComponentType).Name);
+        }
+
+        public void Receive(Message message)
+        {
+            foreach (var component in _components)
+            {
+                if (component.ImplementsInterface<IReceiveMessage>())
+                    (component as IReceiveMessage).ReceiveMessage(message);
+            }
         }
 
         public void Start()

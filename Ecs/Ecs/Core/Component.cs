@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Ecs.Core.Messages;
 using Ecs.Core.Transforms;
 
 namespace Ecs.Core
@@ -20,6 +21,22 @@ namespace Ecs.Core
         protected Transform Transform
         {
             get { return _entity.Transform; }
+        }
+
+        protected List<Entity> AllEntities
+        {
+            get { return _entity.World.Entities; }
+        }
+
+        protected List<Entity> GetByLayer(int layer)
+        {
+            // TODO: slow....
+            return _entity.World.Entities.Where(x => x.Layer == layer).ToList();
+        }
+
+        protected void Send(Message message, Entity receiver)
+        {
+            receiver.Receive(message);
         }
 
         #region Instantiate

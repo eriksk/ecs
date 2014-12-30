@@ -11,7 +11,7 @@ namespace Ecs.Core
     public class EntityWorld
     {
         private readonly List<Entity> _entities;
-        private readonly List<Entity> _destroyedEntities; 
+        private readonly List<Entity> _destroyedEntities, _newEntities; 
         private readonly IdentifierGenerator _identifierGenerator;
         private readonly List<LayerFilter> _layerFilters;
 
@@ -19,8 +19,20 @@ namespace Ecs.Core
         {
             _entities = new List<Entity>();
             _destroyedEntities = new List<Entity>();
+            _newEntities = new List<Entity>();
             _identifierGenerator = new IdentifierGenerator();
             _layerFilters = new List<LayerFilter>();
+        }
+
+        internal List<Entity> Entities 
+        {
+            // TODO: slow....
+            get { return _entities.Concat(_newEntities).ToList(); }
+        }
+
+        public int Count 
+        {
+            get { return _entities.Count + _newEntities.Count; }
         }
 
         public void Clear()
@@ -52,6 +64,8 @@ namespace Ecs.Core
             entity.Transform.Scale = scale;
             prefab.InitializeFor(entity);
 
+            entity.Start();
+
             return entity;
         }
 
@@ -72,20 +86,20 @@ namespace Ecs.Core
         public Entity Find(string name)
         {
             // TODO: index
-            return _entities.First(x => x.Name == name);
+            return _entities.FirstOrDefault(x => x.Name == name) ?? _newEntities.First(x => x.Name == name);
         }
 
         public Entity Find(int id)
         {
             // TODO: index
-            return _entities.First(x => x.Id == id);
+            return _entities.FirstOrDefault(x => x.Id == id) ?? _newEntities.First(x => x.Id == id);
         }
 
         public Entity Create(string name, int layer)
         {
             var entity = new Entity(name, _identifierGenerator.Next(), this);
             entity.Layer = layer;
-            _entities.Add(entity);
+            _newEntities.Add(entity);
             return entity;
         }
 
@@ -96,12 +110,18 @@ namespace Ecs.Core
 
         public void Start()
         {
-            foreach (var entity in _entities)
+            foreach (var entity in _entities.Concat(_newEntities))
                 entity.Start();
         }
 
         public void Update(float dt)
         {
+            while (_newEntities.Count > 0)
+            {
+                _entities.Add(_newEntities[0]);
+                _newEntities.RemoveAt(0);
+            }
+
             foreach (var entity in _entities)
                 entity.Update(dt);
 
@@ -191,5 +211,7 @@ namespace Ecs.Core
                 entity.Render();
             }
         }
+
+
     }
 }

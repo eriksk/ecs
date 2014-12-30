@@ -16,5 +16,20 @@ namespace Ecs.Core.Transforms
             X = x;
             Y = y;
         }
+
+        public static Vector2 operator* (Vector2 t, Vector2 other)
+        {
+            return new Vector2(t.X * other.X, t.Y * other.Y);
+        }
+
+        public static Vector2 operator *(Vector2 t, float scalar)
+        {
+            return new Vector2(t.X * scalar, t.Y * scalar);
+        }
+
+        public static Vector2 operator +(Vector2 t, Vector2 other)
+        {
+            return new Vector2(t.X + other.X, t.Y + other.Y);
+        }
     }
 }

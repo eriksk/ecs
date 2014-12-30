@@ -45,12 +45,14 @@
     <Compile Include="Core\EntityWorld.cs" />
     <Compile Include="Core\Extensions.cs" />
     <Compile Include="Core\Functions\IClone.cs" />
+    <Compile Include="Core\Functions\IReceiveMessage.cs" />
     <Compile Include="Core\Functions\IRender.cs" />
     <Compile Include="Core\Functions\IStart.cs" />
     <Compile Include="Core\Functions\IUpdate.cs" />
     <Compile Include="Core\IdentifierGenerator.cs" />
     <Compile Include="Core\IEntityFactory.cs" />
     <Compile Include="Core\LayerFilter.cs" />
+    <Compile Include="Core\Messages\Message.cs" />
     <Compile Include="Core\Prefab.cs" />
     <Compile Include="Core\Transforms\Transform.cs" />
     <Compile Include="Core\Transforms\Vector2.cs" />
