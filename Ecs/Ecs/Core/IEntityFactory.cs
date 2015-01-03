@@ -8,7 +8,6 @@ namespace Ecs.Core
 {
     public interface IEntityFactory
     {
-        Entity Create();
-        Entity Create(float x, float y);
+        Entity Create(float x = 0f, float y = 0f);
     }
 }

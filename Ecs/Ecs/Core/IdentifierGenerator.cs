@@ -12,7 +12,7 @@ namespace Ecs.Core
 
         public int Next()
         {
-            return _count++;
+            return ++_count;
         }
     }
 }

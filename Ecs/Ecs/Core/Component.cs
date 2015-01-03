@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Ecs.Core.Messages;
 using Ecs.Core.Transforms;
+using Microsoft.Xna.Framework;
 
 namespace Ecs.Core
 {
@@ -23,6 +24,11 @@ namespace Ecs.Core
             get { return _entity.Transform; }
         }
 
+        protected Transform WorldTransform
+        {
+            get { return _entity.WorldTransform; }
+        }
+
         protected List<Entity> AllEntities
         {
             get { return _entity.World.Entities; }
@@ -32,6 +38,14 @@ namespace Ecs.Core
         {
             // TODO: slow....
             return _entity.World.Entities.Where(x => x.Layer == layer).ToList();
+        }
+
+        /// <summary>
+        /// Destroys this component and removes it from the entity
+        /// </summary>
+        protected void Destroy()
+        {
+            _entity.RemoveComponent(this);
         }
 
         protected void Send(Message message, Entity receiver)

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Ecs.Core.Functions;
 using Ecs.Core.Messages;
 using Ecs.Core.Transforms;
@@ -11,10 +9,15 @@ namespace Ecs.Core
 {
     public sealed class Entity
     {
-        private readonly List<Component> _components;
-        public Transform Transform;
+        private readonly List<Component> _components, _newComponents, _removedComponents;
+
+        private Entity _parent;
+        public readonly Transform Transform;
+        private readonly Transform _worldTransform;
+
         private readonly string _name;
         public readonly int Id;
+
         private readonly EntityWorld _world;
 
         internal Entity(string name, int id, EntityWorld world)
@@ -25,7 +28,16 @@ namespace Ecs.Core
             Id = id;
             _world = world;
             _components = new List<Component>();
+            _newComponents = new List<Component>();
+            _removedComponents = new List<Component>();
             Transform = new Transform();
+            _worldTransform = new Transform();
+            _parent = null;
+        }
+
+        public void AddChild(Entity child)
+        {
+            child._parent = this;
         }
 
         public string Name
@@ -46,6 +58,18 @@ namespace Ecs.Core
             get { return _world; }
         }
 
+        public Transform WorldTransform
+        {
+            get
+            {
+                if (_parent == null)
+                    return Transform;
+
+                _worldTransform.Decompose(Transform.Matrix * _parent.WorldTransform.Matrix);
+                return _worldTransform;
+            }
+        }
+
         public void Destroy()
         {
             _world.Destroy(this);
@@ -54,7 +78,12 @@ namespace Ecs.Core
         public void AddComponent(Component component)
         {
             component.Entity = this;
-            _components.Add(component);
+            _newComponents.Add(component);
+        }
+
+        public void RemoveComponent(Component component)
+        {
+            _removedComponents.Add(component);
         }
 
         public TComponentType GetComponent<TComponentType>()
@@ -64,7 +93,12 @@ namespace Ecs.Core
                 if (component.GetType() == typeof (TComponentType))
                     return component.Cast<TComponentType>();
             }
-            throw new ArgumentException("Component for type '{0}' does not exist", typeof(TComponentType).Name);
+            foreach (var component in _newComponents)
+            {
+                if (component.GetType() == typeof(TComponentType))
+                    return component.Cast<TComponentType>();
+            }
+            throw new ArgumentException(string.Format("Component for type '{0}' does not exist", typeof(TComponentType).Name));
         }
 
         public void Receive(Message message)
@@ -76,8 +110,24 @@ namespace Ecs.Core
             }
         }
 
+        private void SyncronizeComponents()
+        {
+            while (_newComponents.Count > 0)
+            {
+                _components.Add(_newComponents[0]);
+                _newComponents.RemoveAt(0);
+            }
+
+            while (_removedComponents.Count > 0)
+            {
+                _components.Remove(_removedComponents[0]);
+                _removedComponents.RemoveAt(0);
+            }
+        }
+
         public void Start()
         {
+            SyncronizeComponents();
             foreach (var component in _components)
             {
                 if (component.ImplementsInterface<IStart>())
@@ -87,6 +137,7 @@ namespace Ecs.Core
 
         public void Update(float dt)
         {
+            SyncronizeComponents();
             foreach (var component in _components)
             {
                 if (component.ImplementsInterface<IUpdate>())

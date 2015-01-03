@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Ecs.Core.Functions;
-using Ecs.Core.Transforms;
+using Microsoft.Xna.Framework;
 
 namespace Ecs.Core
 {
@@ -38,6 +35,8 @@ namespace Ecs.Core
         public void Clear()
         {
             _entities.Clear();
+            _newEntities.Clear();
+            _destroyedEntities.Clear();
         }
 
         public Entity Instantiate(Prefab prefab)
@@ -63,8 +62,6 @@ namespace Ecs.Core
             entity.Transform.Rotation = rotation;
             entity.Transform.Scale = scale;
             prefab.InitializeFor(entity);
-
-            entity.Start();
 
             return entity;
         }
@@ -103,21 +100,21 @@ namespace Ecs.Core
             return entity;
         }
 
+        public IEnumerable<Entity> GetByLayer(int layer)
+        {
+            return _entities.Where(entity => entity.Layer == layer);
+        }
+
         public void Destroy(Entity entity)
         {
             _destroyedEntities.Add(entity);
-        }
-
-        public void Start()
-        {
-            foreach (var entity in _entities.Concat(_newEntities))
-                entity.Start();
         }
 
         public void Update(float dt)
         {
             while (_newEntities.Count > 0)
             {
+                _newEntities[0].Start();
                 _entities.Add(_newEntities[0]);
                 _newEntities.RemoveAt(0);
             }
@@ -201,17 +198,19 @@ namespace Ecs.Core
             }
         }
 
-        public void Render()
+        public void PreRender()
         {
             SortInRenderOrder();
             ApplyLayerFilters();
+        }
 
+        public void Render()
+        {
+            PreRender();
             foreach (var entity in _entities)
             {
                 entity.Render();
             }
         }
-
-
     }
 }
