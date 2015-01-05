@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 
 namespace Ecs.Core
 {
-    public class Component
+    public class System
     {
         private Entity _entity;
 
@@ -35,7 +35,7 @@ namespace Ecs.Core
 
         protected List<Entity> GetByLayer(int layer)
         {
-            // TODO: slow....
+            // TODO: slow....move to entity
             return _entity.World.Entities.Where(x => x.Layer == layer).ToList();
         }
 
@@ -44,7 +44,7 @@ namespace Ecs.Core
         /// </summary>
         protected void Destroy()
         {
-            _entity.RemoveComponent(this);
+            _entity.RemoveSystem(this);
         }
 
         protected void Send(Message message, Entity receiver)
@@ -53,7 +53,7 @@ namespace Ecs.Core
         }
 
         #region Instantiate
-        
+
         protected Entity Instantiate(Prefab prefab)
         {
             return _entity.World.Instantiate(prefab);
@@ -72,7 +72,7 @@ namespace Ecs.Core
         }
 
         #endregion
-        
+
         protected TComponentType GetComponent<TComponentType>()
         {
             return _entity.GetComponent<TComponentType>();

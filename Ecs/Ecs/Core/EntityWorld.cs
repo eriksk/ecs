@@ -21,7 +21,7 @@ namespace Ecs.Core
             _layerFilters = new List<LayerFilter>();
         }
 
-        internal List<Entity> Entities 
+        public List<Entity> Entities 
         {
             // TODO: slow....
             get { return _entities.Concat(_newEntities).ToList(); }

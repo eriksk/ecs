@@ -9,7 +9,8 @@ namespace Ecs.Core
 {
     public sealed class Entity
     {
-        private readonly List<Component> _components, _newComponents, _removedComponents;
+        private readonly DynamicList<Component> _components;
+        private readonly DynamicList<System> _systems;
 
         private Entity _parent;
         public readonly Transform Transform;
@@ -24,15 +25,23 @@ namespace Ecs.Core
         {
             if (name == null) throw new ArgumentNullException("name");
             if (world == null) throw new ArgumentNullException("world");
+
             _name = name;
             Id = id;
             _world = world;
-            _components = new List<Component>();
-            _newComponents = new List<Component>();
-            _removedComponents = new List<Component>();
-            Transform = new Transform();
+
             _worldTransform = new Transform();
+            Transform = new Transform();
+
+            _components = new DynamicList<Component>();
+            _systems = new DynamicList<System>();
+            
             _parent = null;
+        }
+
+        public Entity Parent 
+        {
+            get { return _parent; }
         }
 
         public void AddChild(Entity child)
@@ -48,9 +57,9 @@ namespace Ecs.Core
         public int Layer { get; set; }
         public int IndexInLayer { get; set; }
 
-        internal List<Component> Components 
+        public List<Component> Components 
         {
-            get { return _components; }
+            get { return _components.Items; }
         }
 
         internal EntityWorld World
@@ -78,79 +87,78 @@ namespace Ecs.Core
         public void AddComponent(Component component)
         {
             component.Entity = this;
-            _newComponents.Add(component);
+            _components.Add(component);
         }
 
         public void RemoveComponent(Component component)
         {
-            _removedComponents.Add(component);
+            _components.Remove(component);
+        }
+
+        public void AddSystem(System system)
+        {
+            system.Entity = this;
+            _systems.Add(system);
+        }
+
+        public void RemoveSystem(System system)
+        {
+            _systems.Remove(system);
         }
 
         public TComponentType GetComponent<TComponentType>()
         {
-            foreach (var component in _components)
+            foreach (var component in _components.Items)
             {
                 if (component.GetType() == typeof (TComponentType))
-                    return component.Cast<TComponentType>();
-            }
-            foreach (var component in _newComponents)
-            {
-                if (component.GetType() == typeof(TComponentType))
                     return component.Cast<TComponentType>();
             }
             throw new ArgumentException(string.Format("Component for type '{0}' does not exist", typeof(TComponentType).Name));
         }
 
-        public void Receive(Message message)
+        public TSystemType GetSystem<TSystemType>()
         {
-            foreach (var component in _components)
+            foreach (var system in _systems.Items)
             {
-                if (component.ImplementsInterface<IReceiveMessage>())
-                    (component as IReceiveMessage).ReceiveMessage(message);
+                if (system.GetType() == typeof(TSystemType))
+                    return system.Cast<TSystemType>();
             }
+            throw new ArgumentException(string.Format("System for type '{0}' does not exist", typeof(TSystemType).Name));
         }
 
-        private void SyncronizeComponents()
+        public void Receive(Message message)
         {
-            while (_newComponents.Count > 0)
+            foreach (var system in _systems)
             {
-                _components.Add(_newComponents[0]);
-                _newComponents.RemoveAt(0);
-            }
-
-            while (_removedComponents.Count > 0)
-            {
-                _components.Remove(_removedComponents[0]);
-                _removedComponents.RemoveAt(0);
+                if (system.ImplementsInterface<IReceiveMessage>())
+                    (system as IReceiveMessage).ReceiveMessage(message);
             }
         }
 
         public void Start()
         {
-            SyncronizeComponents();
-            foreach (var component in _components)
+            foreach (var system in _systems)
             {
-                if (component.ImplementsInterface<IStart>())
-                    (component as IStart).Start();
+                if (system.ImplementsInterface<IStart>())
+                    (system as IStart).Start();
             }
         }
 
         public void Update(float dt)
         {
-            SyncronizeComponents();
-            foreach (var component in _components)
+            foreach (var system in _systems)
             {
-                if (component.ImplementsInterface<IUpdate>())
-                    (component as IUpdate).Update(dt);
+                if (system.ImplementsInterface<IUpdate>())
+                    (system as IUpdate).Update(dt);
             }
         }
 
         public void Render()
         {
-            foreach (var component in _components)
+            foreach (var system in _systems)
             {
-                if (component.ImplementsInterface<IRender>())
-                    (component as IRender).Render();
+                if (system.ImplementsInterface<IRender>())
+                    (system as IRender).Render();
             }
         }
     }

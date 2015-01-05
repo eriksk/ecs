@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Ecs.Core.Functions;
+using Ecs.Core.Cloning;
 
 namespace Ecs.Core
 {
@@ -10,23 +10,18 @@ namespace Ecs.Core
     {
         private readonly string _name;
         private readonly Component[] _components;
+        private readonly System[] _systems;
         private readonly int _layer;
 
-        public Prefab(string name, Component[] components, int layer = 0)
+        public Prefab(string name, Component[] components, System[] systems, int layer = 0)
         {
             if (name == null) throw new ArgumentNullException("name");
             if (components == null) throw new ArgumentNullException("components");
+            if (systems == null) throw new ArgumentNullException("systems");
             _name = name;
             _components = components;
+            _systems = systems;
             _layer = layer;
-
-            foreach (var component in _components)
-            {
-                if (!component.ImplementsInterface<IClone>())
-                {
-                    throw new Exception(string.Format("Component of type '{0}' is not cloneable and cannot be a prefab", component.GetType().Name));
-                }
-            }
         }
 
         public string Name 
@@ -42,7 +37,9 @@ namespace Ecs.Core
         internal void InitializeFor(Entity entity)
         {
             foreach (var component in _components)
-                entity.AddComponent(component.Cast<IClone>().Clone());
+                entity.AddComponent(component.Clone(component.GetType()));
+            foreach (var system in _systems)
+                entity.AddSystem(system.Clone(system.GetType()));
         }
     }
 }
