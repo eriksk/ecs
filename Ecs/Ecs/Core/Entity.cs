@@ -35,8 +35,17 @@ namespace Ecs.Core
 
             _components = new DynamicList<Component>();
             _systems = new DynamicList<System>();
-            
+
+            // initialize a system when needed
+            _systems.OnItemAddedToRealCollection += OnSystemAddedToRealCollection;
+
             _parent = null;
+        }
+
+        private void OnSystemAddedToRealCollection(System system)
+        {
+            if (system.ImplementsInterface<IStart>())
+                (system as IStart).Start();
         }
 
         public Entity Parent 
@@ -106,7 +115,7 @@ namespace Ecs.Core
             _systems.Remove(system);
         }
 
-        public TComponentType GetComponent<TComponentType>()
+        public TComponentType GetComponent<TComponentType>() where TComponentType : Component
         {
             foreach (var component in _components.Items)
             {
@@ -116,7 +125,7 @@ namespace Ecs.Core
             throw new ArgumentException(string.Format("Component for type '{0}' does not exist", typeof(TComponentType).Name));
         }
 
-        public TSystemType GetSystem<TSystemType>()
+        public TSystemType GetSystem<TSystemType>() where TSystemType : System
         {
             foreach (var system in _systems.Items)
             {
@@ -132,15 +141,6 @@ namespace Ecs.Core
             {
                 if (system.ImplementsInterface<IReceiveMessage>())
                     (system as IReceiveMessage).ReceiveMessage(message);
-            }
-        }
-
-        public void Start()
-        {
-            foreach (var system in _systems)
-            {
-                if (system.ImplementsInterface<IStart>())
-                    (system as IStart).Start();
             }
         }
 

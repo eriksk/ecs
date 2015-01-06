@@ -114,7 +114,7 @@ namespace Ecs.Core
         {
             while (_newEntities.Count > 0)
             {
-                _newEntities[0].Start();
+                //_newEntities[0].Start();
                 _entities.Add(_newEntities[0]);
                 _newEntities.RemoveAt(0);
             }

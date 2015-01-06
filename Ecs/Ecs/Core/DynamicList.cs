@@ -14,6 +14,9 @@ namespace Ecs.Core
         private readonly List<T> _items, _newItems, _removedItems; 
         private int _current;
 
+        public delegate void ItemAddedToRealCollection(T item);
+        public event ItemAddedToRealCollection OnItemAddedToRealCollection;
+
         public DynamicList()
         {
             _items = new List<T>();
@@ -75,7 +78,10 @@ namespace Ecs.Core
         {
             while (_newItems.Count > 0)
             {
-                _items.Add(_newItems[0]);
+                var item = _newItems[0];
+                _items.Add(item);
+                if (OnItemAddedToRealCollection != null)
+                    OnItemAddedToRealCollection(item);
                 _newItems.RemoveAt(0);
             }
 

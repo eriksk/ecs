@@ -73,9 +73,14 @@ namespace Ecs.Core
 
         #endregion
         
-        protected TComponentType GetComponent<TComponentType>()
+        protected TComponentType GetComponent<TComponentType>() where TComponentType : Component
         {
             return _entity.GetComponent<TComponentType>();
+        }
+
+        protected TSystemType GetSystem<TSystemType>() where TSystemType : System
+        {
+            return _entity.GetSystem<TSystemType>();
         }
     }
 }
